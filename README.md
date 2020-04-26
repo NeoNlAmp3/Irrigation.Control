@@ -1,2 +1,2 @@
 # Irrigation.Control
-ESP 32 controller software for high bed garden
+Irrigation system for raised bed
