@@ -14,12 +14,11 @@ public:
     void SendVoltage();
 
 private:
-    const std::string _baseTopic = "Moisture/%d/";
-    const std::string _min = "Min";
-    const std::string _max = "Max";
-          std::string _configTopic;
+    const char* _baseTopic  = "Moisture/%d/";
+    const char* _min        = "Min";
+    const char* _max        = "Max";
 
-    String* _IDString;
+    char _IdString[128];
 
     AsyncMqttClient* _mqttClient;
     Moisture*        _moisture;
@@ -31,28 +30,26 @@ private:
     void SendDate(const char* valueName, double value);
     void SendDate(const char* valueName, int value);
 
-    char* SetTopic(const char* topic);
+    void SetTopic(char *str, const char* topic);
+    void Publish(const char* topic, const char* msg);
 };
 
 static int _ID = 0;
 
 MoistureMQTT::MoistureMQTT(Moisture* moisture, AsyncMqttClient* client){
-    char _IDstring[20];
-   
+    char _configTopic[128];
+
     _mqttClient = client;
     _moisture = moisture;
     
-    sprintf(_IDstring, _baseTopic.c_str(), _ID++); // "Moisture/{_ID}/"
     Serial.println("Initialize Moisture MQTT Wrapper");
-    Serial.println(_IDstring);
-    _IDString = new String(_IDstring);
 
-    _configTopic = _IDString->c_str();
-    _configTopic += "SetConfig";
+    sprintf(_IdString, _baseTopic, _ID++); // "Moisture/{_ID}/"
+    strncpy(_configTopic, _IdString, 128);
+    strncat(_configTopic, "SetConfig", 128);
  
     using namespace std::placeholders;  // for _1, _2, _3...
-  
-    _mqttClient->subscribe(_configTopic.c_str(), 1);
+    _mqttClient->subscribe(_configTopic, 1);
     auto con = std::bind(&MoistureMQTT::OnMqttConnect, this, _1);
     _mqttClient->onConnect(con);
 
@@ -64,8 +61,8 @@ MoistureMQTT::~MoistureMQTT(){}
 
 void MoistureMQTT::OnMqttConnect(bool sessionPresent)
 {
-    SendConfig((char*)_min.c_str(), _moisture->GetCalibration(Moisture::Calibrate::MinValue));
-    SendConfig((char*)_max.c_str(), _moisture->GetCalibration(Moisture::Calibrate::MaxValue));
+    SendConfig(_min, _moisture->GetCalibration(Moisture::Calibrate::MinValue));
+    SendConfig(_max, _moisture->GetCalibration(Moisture::Calibrate::MaxValue));
 }
 
 void MoistureMQTT::SendMoisture(){
@@ -80,58 +77,53 @@ void MoistureMQTT::SendVoltage(){
     SendDate((char*)"Voltage", _moisture->GetVoltage());
 }
 
-void MoistureMQTT::SendDate(const char* valueName, int value){
-    char* msg = new char[128];
-
-    String topic = SetTopic("Data/");
-    topic.concat(valueName);
-    Serial.println(topic);
-    
-
-    Serial.print("Send Payload: ");
-    sprintf(msg, "%d", value);
-    Serial.println(msg);
-
-    _mqttClient->publish(topic.c_str(), 1, true, msg);
+void MoistureMQTT::SetTopic(char *str, const char* topic){
+    strncpy(str, _IdString, 128);
+    strncat(str, topic, 128);
 }
 
-void MoistureMQTT::SendDate(const char* valueName, double value){
-    char* msg = new char[128];
-
-    char* topic = SetTopic("Data/");
-    strncpy(topic, valueName, 128);
-    Serial.println(topic);
-    
-    Serial.print("Send Payload: ");
-    sprintf(msg, "%f", value);
+void MoistureMQTT::Publish(const char* topic, const char* msg){
+    Serial.print(topic);
+    Serial.print(" = ");
     Serial.println(msg);
 
     _mqttClient->publish(topic, 1, true, msg);
 }
 
-char* MoistureMQTT::SetTopic(const char* topic){
-    Serial.print("Set Topic: ");
+void MoistureMQTT::SendDate(const char* valueName, int value){
+    char msg[128];
+    char topic[128];
+
+    SetTopic(topic, "Data/");
+    strncat(topic, valueName, 128);
     
-    char str[128];
-    strncpy(str, _IDString->c_str(), 128);
-    strncat(str, topic, 128);
-    
-    Serial.println(str);
-    return str;
+    sprintf(msg, "%d", value);
+        
+    Publish(topic, msg);
+}
+
+void MoistureMQTT::SendDate(const char* valueName, double value){
+    char msg[128];
+    char topic[128];
+
+    SetTopic(topic, "Data/");
+    strncat(topic, valueName, 128);
+
+    sprintf(msg, "%f", value);
+        
+    Publish(topic, msg);
 }
 
 void MoistureMQTT::SendConfig(const char* valueName, int value){
-    char* msg = new char[128];
+    char msg[128];
+    char topic[128];
 
-    String topic = SetTopic("GetConfig/");
-    topic.concat(valueName);
-    Serial.println(topic);
+    SetTopic(topic, "GetConfig/");
+    strncat(topic, valueName, 128);
     
-    Serial.print("Send Payload: ");
     sprintf(msg, "%d", value);
-    Serial.println(msg);
 
-    _mqttClient->publish(topic.c_str(), 1, true, msg);
+    Publish(topic, msg);
 }   
 
 void MoistureMQTT::ReceiveCommands(const char* topic, const char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total){

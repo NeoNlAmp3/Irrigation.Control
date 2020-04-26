@@ -120,10 +120,10 @@ void setupMQTT()
 
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.onSubscribe(onMqttSubscribe);
-  mqttClient.onUnsubscribe(onMqttUnsubscribe);
-  mqttClient.onMessage(onMqttMessage);
-  mqttClient.onPublish(onMqttPublish);
+  // mqttClient.onSubscribe(onMqttSubscribe);
+  // mqttClient.onUnsubscribe(onMqttUnsubscribe);
+  // mqttClient.onMessage(onMqttMessage);
+  // mqttClient.onPublish(onMqttPublish);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
   connectToWifi();
