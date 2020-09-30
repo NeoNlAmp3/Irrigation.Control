@@ -1,3 +1,5 @@
+#pragma once
+
 #include <driver/adc.h>
 
 class Moisture {

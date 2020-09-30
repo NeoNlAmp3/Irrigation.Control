@@ -1,5 +1,7 @@
+#pragma once
+
 #include <string>
-#include <MQTTClient.hpp>
+#include <MQTT/MQTTClient.hpp>
 #include <Moisture.hpp>
 
 class MoistureMQTT{

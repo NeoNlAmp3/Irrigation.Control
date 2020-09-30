@@ -1,5 +1,7 @@
+#pragma once
+
 #include <WiFi.h>
-#include <Logon.hpp>
+#include <Logon/Logon.hpp>
 
 extern "C"
 {
@@ -39,6 +41,8 @@ namespace NeoN{
 		static void Setup() {
 			wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(Connect));
 			WiFi.onEvent(WiFiEvent);
+
+			Connect();
 		}
 	}
 }

@@ -11,25 +11,25 @@
 //  - tool-mkspiffs 2.230.0 (2.30)
 //  - toolchain-xtensa32 2.50200.80 (5.2.0)
 
-#include <MoistureMQTT.hpp>
+#include <Influx/MoistureInflux.hpp>
+#include <MQTT/MoistureMQTT.hpp>
 #include <WiFiConnection.hpp>
 
-Moisture*       moisture[2];
-MoistureMQTT*   moistureMqtt[2];
 
-using namespace NeoN;
-
+Moisture*                   moisture[2];
+MoistureMQTT*               moistureMqtt[2];
+MoistureInfluxConnector*    moistureInflux[2];
 int motor[2];
-
+using namespace NeoN;
 void setup() {
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     // WiFi.mode(WIFI_STA);
     Serial.begin(115200);
     delay(100);
     WiFiConnection::Setup();
-    MQTTClient::Setup();
+    // MQTTClient::Setup();
 
-    MQTTClient::Client.subscribe("Moisture", 1);
+    // MQTTClient::Client.subscribe("Moisture", 1);
 
     Serial.println("Build Sensors");
     moisture[0] = new Moisture(ADC1_CHANNEL_6);
@@ -43,9 +43,19 @@ void setup() {
     for (int i = 0; i < 2; i++)
         pinMode(motor[i], OUTPUT);
 
-    Serial.println("Build MQTT Wrapper");
-    moistureMqtt[0] = new MoistureMQTT(moisture[0], &MQTTClient::Client);
-    moistureMqtt[1] = new MoistureMQTT(moisture[1], &MQTTClient::Client);
+    Serial.print("Connect WiFi ...");
+    while (!WiFi.isConnected()){
+        Serial.print(".");
+        delay(100);
+    }
+    Serial.println("");
+    // Serial.println("Build MQTT Wrapper");
+    // moistureMqtt[0] = new MoistureMQTT(moisture[0], &MQTTClient::Client);
+    // moistureMqtt[1] = new MoistureMQTT(moisture[1], &MQTTClient::Client);
+    
+     Serial.println("Build Influx Wrapper");
+    moistureInflux[0] = new MoistureInfluxConnector(moisture[0]);
+    moistureInflux[1] = new MoistureInfluxConnector(moisture[1]);
 }
 
 void loop() {
@@ -54,10 +64,11 @@ void loop() {
 
     for (int i = 0; i < 2; i++)
     {
-        moistureMqtt[i]->SendData();
-        moistureMqtt[i]->SendMoisture(); 
-        Serial.println();
+        // moistureMqtt[i]->SendData();
+        // moistureMqtt[i]->SendMoisture(); 
+        // Serial.println();
 
+        moistureInflux[i]->SendDataPoint();
         // if (moist <=1 0.4){
         //     sprintf(msg, "On");
         //     sprintf(pub, "%s/Motor", mqtt);
@@ -71,7 +82,7 @@ void loop() {
         //     digitalWrite(motor[i], LOW);
         // }
     }
-    delay(2000);
+    delay(30000);
 }
 
 
