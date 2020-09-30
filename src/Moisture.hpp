@@ -1,6 +1,6 @@
 #include <driver/adc.h>
 
-class Moisture{
+class Moisture {
 
 public:
 
@@ -38,7 +38,7 @@ private:
 
 Moisture::~Moisture(){
 
-}
+};
 
 
 Moisture::Moisture(adc1_channel_t channel){
@@ -72,13 +72,13 @@ Moisture Moisture::SetCalibration(Moisture::Calibrate point){
     }
 
     return *this;
-}
+};
 
 
 Moisture Moisture::SetMultiSampling(int samples){
     _samples = samples;
     return *this;
-}
+};
 
 int Moisture::GetCalibration(Moisture::Calibrate point){
     switch (point)
@@ -90,11 +90,11 @@ int Moisture::GetCalibration(Moisture::Calibrate point){
     }
 
     return 0;    
-}
+};
 
 double Moisture::GetVoltage(){
     return (double) GetData() / (double) 4095 * 3.3;
-}
+};
 
 
 double Moisture::GetMoisture(){
@@ -122,5 +122,5 @@ int Moisture::GetData(){
     }
 
     return 4096 - (value / _samples);
-}
+};
 

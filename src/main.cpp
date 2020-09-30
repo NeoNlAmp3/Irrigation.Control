@@ -10,11 +10,14 @@
 //  - tool-esptoolpy 1.20600.0 (2.6.0)
 //  - tool-mkspiffs 2.230.0 (2.30)
 //  - toolchain-xtensa32 2.50200.80 (5.2.0)
-#include "MQTT.hpp"
-#include "MoistureMQTT.hpp"
+
+#include <MoistureMQTT.hpp>
+#include <WiFiConnection.hpp>
 
 Moisture*       moisture[2];
 MoistureMQTT*   moistureMqtt[2];
+
+using namespace NeoN;
 
 int motor[2];
 
@@ -23,10 +26,10 @@ void setup() {
     // WiFi.mode(WIFI_STA);
     Serial.begin(115200);
     delay(100);
+    WiFiConnection::Setup();
+    MQTTClient::Setup();
 
-    setupMQTT();
-
-    mqttClient.subscribe("Moisture", 1);
+    MQTTClient::Client.subscribe("Moisture", 1);
 
     Serial.println("Build Sensors");
     moisture[0] = new Moisture(ADC1_CHANNEL_6);
@@ -41,8 +44,8 @@ void setup() {
         pinMode(motor[i], OUTPUT);
 
     Serial.println("Build MQTT Wrapper");
-    moistureMqtt[0] = new MoistureMQTT(moisture[0], &mqttClient);
-    moistureMqtt[1] = new MoistureMQTT(moisture[1], &mqttClient);
+    moistureMqtt[0] = new MoistureMQTT(moisture[0], &MQTTClient::Client);
+    moistureMqtt[1] = new MoistureMQTT(moisture[1], &MQTTClient::Client);
 }
 
 void loop() {
@@ -68,7 +71,7 @@ void loop() {
         //     digitalWrite(motor[i], LOW);
         // }
     }
-    delay(30000);
+    delay(2000);
 }
 
 

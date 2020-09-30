@@ -1,6 +1,6 @@
 #include <string>
-#include <AsyncMqttClient.h>
-#include "Moisture.hpp"
+#include <MQTTClient.hpp>
+#include <Moisture.hpp>
 
 class MoistureMQTT{
 
@@ -52,9 +52,6 @@ MoistureMQTT::MoistureMQTT(Moisture* moisture, AsyncMqttClient* client){
     using namespace std::placeholders;  // for _1, _2, _3...
     auto con = std::bind(&MoistureMQTT::OnConnect, this, _1);
     _mqttClient->onConnect(con);
-
-
-
 }
 
 MoistureMQTT::~MoistureMQTT(){}
